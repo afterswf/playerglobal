@@ -40,7 +40,7 @@ const JOINT_STYLES: Record<string, number> = {
 	miter: AwayJointStyle.MITER
 };
 
-function styleName(styles: Record<string, number>, value: number): string {
+function styleName(styles: Record<string, number>, value: unknown): string {
 	for (const name in styles) {
 		if (styles[name] === value)
 			return name;
