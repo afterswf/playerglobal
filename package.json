@@ -9,7 +9,7 @@
   "author": "Rob Bateman",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/awayfl/playerglobal.git"
+    "url": "git+https://github.com/afterswf/playerglobal.git"
   },
   "scripts": {
     "rimraf": "rimraf",
@@ -25,6 +25,7 @@
     "prebuild": "npm run clean:dist",
     "build": "npm run tsc:build && npm run rollup",
     "prepare": "npm run tsc:build",
+    "prepublishOnly": "npm run build",
     "copyVersionToIndex": "node ./copyVersionToIndex && git add ./index.ts && git commit -m \"update version number in index.ts\"",
     "version": "npm run copyVersionToIndex && npm run build"
   },
@@ -37,9 +38,9 @@
   ],
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/awayfl/playerglobal/issues"
+    "url": "https://github.com/afterswf/playerglobal/issues"
   },
-  "homepage": "https://github.com/awayfl/playerglobal#readme",
+  "homepage": "https://github.com/afterswf/playerglobal#readme",
   "peerDependencies": {
     "@awayfl/avm2": "^0.2.0",
     "@awayfl/swf-loader": "^0.4.0",
@@ -72,5 +73,8 @@
     "rollup": "^2.79.1",
     "tslib": "^2.3.0",
     "typescript": "^4.9.5"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
