@@ -14,7 +14,8 @@ export default {
 			'@awayjs/view': 'AwayjsView',
 			'@awayjs/renderer': 'AwayjsRenderer',
 			'@awayjs/graphics': 'AwayjsGraphics',
-			'@awayjs/materials': 'AwayjsMaterials'
+			'@awayjs/materials': 'AwayjsMaterials',
+			'@awayjs/scene': 'AwayjsScene'
 		},
 		sourcemap: true,
 		format: 'umd',
@@ -28,7 +29,8 @@ export default {
 		'@awayjs/view',
 		'@awayjs/renderer',
 		'@awayjs/graphics',
-		'@awayjs/materials'
+		'@awayjs/materials',
+		'@awayjs/scene'
 	],
 	plugins: [
 		nodeResolve(),
