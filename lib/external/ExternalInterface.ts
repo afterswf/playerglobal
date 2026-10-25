@@ -60,6 +60,7 @@ export class ExternalInterface extends ASObject {
 
 		this._addCallback(functionName, (request: string, args: any[]) => {
 			let returnAsJS: Boolean = true;
+			const calledFromJS = Array.isArray(args);
 			if (typeof args !== 'undefined') {
 				if (Array.isArray(args)) {
 					const wrappedArgs = [];
@@ -102,6 +103,9 @@ export class ExternalInterface extends ASObject {
 				} else {
 					throw e;
 				}
+			}
+			if (calledFromJS) {
+				return self.convertToJS(result);
 			}
 			return returnAsJS ? self.convertToJSString(result) : self.convertToXMLString(result);
 		});
@@ -234,9 +238,33 @@ export class ExternalInterface extends ASObject {
 		}
 	}
 
+	/**
+	 * Converts an AS value into a JS value, for callbacks that JS calls directly
+	 */
+	static convertToJS(obj: any): any {
+		if (typeof obj !== 'object' || obj === null) {
+			return obj;
+		}
+		if (this.sec.AXArray.axIsInstanceOf(obj)) {
+			return obj.value.map((value) => this.convertToJS(value));
+		}
+		if (this.sec.AXDate.axIsInstanceOf(obj)) {
+			return new Date(+obj.value);
+		}
+		if (this.$BgmarshallExceptions && (this.sec.AXError.axIsInstanceOf(obj))) {
+			throw new Error(String(obj));
+		}
+		const result = {};
+		const keys = obj.axGetEnumerableKeys();
+		for (let i = 0; i < keys.length; i++) {
+			result[keys[i]] = this.convertToJS(obj.axGetPublicProperty(keys[i]));
+		}
+		return result;
+	}
+
 	static convertToJSString(obj): string {
 		if (typeof obj == 'string') {
-			return '"' + obj.split('\r').join('\\r').split('\n').join('\\n').split('"').join('\\"') + '"';
+			return JSON.stringify(obj);
 		}
 		if (this.sec.AXArray.axIsInstanceOf(obj)) {
 			var parts: string[] = [];
@@ -247,17 +275,17 @@ export class ExternalInterface extends ASObject {
 			return '[' + parts.join(',') + ']';
 		}
 		if (this.sec.AXDate.axIsInstanceOf(obj)) {
-			return 'new Date(' + obj.value + ')';
+			return 'new Date(' + (+obj.value) + ')';
 		}
 		if (this.$BgmarshallExceptions && (this.sec.AXError.axIsInstanceOf(obj))) {
-			return 'throw "' + obj + '"';
+			return 'throw ' + JSON.stringify(String(obj));
 		}
 		if (typeof obj === 'object' && obj !== null) {
 			var parts: string[] = [];
 			const keys = obj.axGetEnumerableKeys();
 			for (let i = 0; i < keys.length; i++) {
 				const key = keys[i];
-				parts.push(key + ':' + this.convertToJSString(obj.axGetPublicProperty(key)));
+				parts.push(JSON.stringify(key) + ':' + this.convertToJSString(obj.axGetPublicProperty(key)));
 			}
 			return '({' + parts.join(',') + '})';
 		}

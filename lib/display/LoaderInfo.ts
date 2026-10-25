@@ -18,6 +18,18 @@ interface LoaderInfoCompleteQueueItem {
 	loaderInfo: LoaderInfo;
 	delayCnt: number;
 }
+
+function parseQueryString(url: string): Record<string, string> {
+	const result: Record<string, string> = {};
+	const index = url ? url.indexOf('?') : -1;
+	if (index === -1) {
+		return result;
+	}
+	new URLSearchParams(url.substring(index + 1).split('#')[0]).forEach((value, key) => {
+		result[key] = value;
+	});
+	return result;
+}
 export class LoaderInfoCompleteQueue {
 	private static _queue: LoaderInfoCompleteQueueItem[] = [];
 	public static DELAY: number = 2;
@@ -149,6 +161,9 @@ export class LoaderInfo extends EventDispatcher {
 	private _bytesLoaded: number = 0;
 	private _bytesTotal: number = 0;
 	private _url: string;
+	private _urlParameters: Record<string, string> = {};
+	private _flashVars: Record<string, string> = {};
+	private _parameters: any = null;
 
 	private _source: ByteArray;
 	private _loader: ILoader;
@@ -231,7 +246,25 @@ export class LoaderInfo extends EventDispatcher {
 		this._bytesLoaded = 0;
 		this._bytesTotal = this._source?.length || 0;
 
-		this._url = new URL(event.url, document.baseURI).href;
+		this._setURL(new URL(event.url, document.baseURI).href);
+	}
+
+	private _setURL(value: string): void {
+		this._url = value;
+		// read now, as the url getter strips the query string
+		this._urlParameters = parseQueryString(value);
+		this._parameters = null;
+	}
+
+	/**
+	 * Sets the FlashVars passed to the main SWF file by the embedding page
+	 */
+	public _setFlashVars(value: Record<string, any>): void {
+		this._flashVars = {};
+		for (const key in value) {
+			this._flashVars[key] = String(value[key]);
+		}
+		this._parameters = null;
 	}
 
 	private _onLoadProgress(event: URLLoaderEvent): void {
@@ -531,9 +564,11 @@ export class LoaderInfo extends EventDispatcher {
 	 * ActionScript 3.0.
 	 */
 	public get parameters(): any {
-		// @todo
-		Debug.throwPIR('playerglobals/display/LoaderInfo', 'get parameters', '');
-		return this.sec.createArrayUnsafe([]);
+		if (!this._parameters) {
+			this._parameters = this.sec.createObjectFromJS(
+				Object.assign({}, this._urlParameters, this._flashVars));
+		}
+		return this._parameters;
 	}
 
 	/**
@@ -663,7 +698,7 @@ export class LoaderInfo extends EventDispatcher {
 	}
 
 	public set url(value: string) {
-		this._url = value;
+		this._setURL(value);
 	}
 
 	/**
