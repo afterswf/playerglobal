@@ -9,6 +9,8 @@ import {
 	GradientFillStyle,
 	BitmapFillStyle,
 	IGraphicsData as AwayIGraphicsData,
+	CapsStyle as AwayCapsStyle,
+	JointStyle as AwayJointStyle,
 } from '@awayjs/graphics';
 import { ASObject, Float64Vector, Int32Vector } from '@awayfl/avm2';
 import { Debug, IAssetAdapter, Matrix as AwayMatrix } from '@awayjs/core';
@@ -25,6 +27,26 @@ import { DisplayObjectContainer } from './DisplayObjectContainer';
 import { GraphicsStroke } from './GraphicsStroke';
 import { Sprite } from './Sprite';
 import { IGraphicsData } from './IGraphicsData';
+
+// AS3 caps and joints are strings, which @awayjs/graphics takes as numbers
+const CAPS_STYLES: Record<string, number> = {
+	none: AwayCapsStyle.NONE,
+	round: AwayCapsStyle.ROUND,
+	square: AwayCapsStyle.SQUARE
+};
+const JOINT_STYLES: Record<string, number> = {
+	round: AwayJointStyle.ROUND,
+	bevel: AwayJointStyle.BEVEL,
+	miter: AwayJointStyle.MITER
+};
+
+function styleName(styles: Record<string, number>, value: number): string {
+	for (const name in styles) {
+		if (styles[name] === value)
+			return name;
+	}
+	return 'round';
+}
 
 export class Graphics extends ASObject implements IAssetAdapter {
 
@@ -207,7 +229,12 @@ export class Graphics extends ASObject implements IAssetAdapter {
 		if (alpha > 1)
 			alpha = 1;
 		this.adaptee.lineStyle(
-			thickness, color, alpha, pixelHinting, <any>scaleMode, <any>caps, <any>joints, miterLimit);
+			thickness, color, alpha, pixelHinting, <any>scaleMode,
+			// Flash uses round caps and joints when they're not given
+			CAPS_STYLES[caps] ?? AwayCapsStyle.ROUND,
+			JOINT_STYLES[joints] ?? AwayJointStyle.ROUND,
+			// and rounds miter limits outside [1, 255]
+			Math.min(255, Math.max(1, miterLimit)));
 	}
 
 	public lineGradientStyle(type: string, colors: ASArray, alphas: ASArray, ratios: ASArray,
@@ -509,9 +536,9 @@ export class Graphics extends ASObject implements IAssetAdapter {
 				stroke.thickness,
 				false,
 				'normal',
-				'none',
-				'round',
-				3,
+				styleName(CAPS_STYLES, stroke.capstyle),
+				styleName(JOINT_STYLES, stroke.jointstyle),
+				stroke.miterLimit,
 				fill
 			);
 		}
