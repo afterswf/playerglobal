@@ -919,14 +919,11 @@ export class InteractiveObject extends DisplayObject {
 	 * the value is true.For a Sprite object or MovieClip object with buttonMode = true, the value is true.
 	 */
 	public get tabEnabled(): boolean {
-		// @todo
-		Debug.throwPIR('playerglobals/display/InteractiveObject', 'get tabEnabled', '');
-		return false;
+		return this.adaptee.tabEnabled;
 	}
 
 	public set tabEnabled(enabled: boolean) {
-		// @todo
-		Debug.throwPIR('playerglobals/display/InteractiveObject', 'set tabEnabled', '');
+		this.adaptee.tabEnabled = !!enabled;
 	}
 
 	/**
@@ -957,14 +954,11 @@ export class InteractiveObject extends DisplayObject {
 	 * InteractiveObject(tlfInstance3.getChildAt(1)).tabIndex = 1;
 	 */
 	public get tabIndex(): number {
-		// @todo
-		Debug.throwPIR('playerglobals/display/InteractiveObject', 'get tabIndex', '');
-		return 0;
+		return this.adaptee.tabIndex;
 	}
 
 	public set tabIndex(index: number) {
-		// @todo
-		Debug.throwPIR('playerglobals/display/InteractiveObject', 'set tabIndex', '');
+		this.adaptee.tabIndex = index;
 	}
 
 	/**
